@@ -136,6 +136,23 @@ http://www.vindinium.org/
     However it would run fine as is but would only win by mistake :)
 
 
+5a - Setting up a Python virtual environment (recommended):
+---------------------------------------------------------
+
+    It is recommended to use a Python virtual environment to manage dependencies.
+    To set up and activate a virtual environment, run the following commands in your terminal:
+
+        python -m venv venv
+        # On Linux/macOS:
+        source venv/bin/activate
+        # On Windows:
+        venv\Scripts\activate
+
+    Then install the required dependencies:
+
+        pip install -r requirements.txt
+
+    This will install all necessary packages, including 'requests' and 'windows-curses' (the latter only on Windows).
 
 
 ![Curses U.I running a game](screenshots/vindinium_curses_ui.png)
