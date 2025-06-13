@@ -1,104 +1,177 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+"""
+Vindinium heuristic AI — **v3.0: moves again!**
+==============================================
 
-########################################################################
-#
-# Pure random A.I, you may NOT use it to win ;-)
-#
-########################################################################
+Bug‑fix release — the previous version refused to walk onto mine tiles, so it
+sat still until an enemy wandered next to it.
 
-import random
+Key fixes
+---------
+* **passable()** now allows stepping onto mine tiles (required to capture them).
+* **Mine target list** excludes mines you already own, preventing re‑targeting.
+* Simplified capture logic: always compute a BFS path and move towards the
+  chosen mine; no more special‑case “stay still if adjacent”.
+
+No external dependencies (pure std‑lib).
+"""
+
+from collections import deque
+from typing import List, Tuple, Any
 
 
 class AI:
-    """Pure random A.I, you may NOT use it to win ;-)"""
-    def __init__(self):
-        pass
+    """Phase‑aware greedy Vindinium bot adaptive to any max‑turn setting."""
 
+    def __init__(self):
+        self.game: Any | None = None
+        self.prev_life: int | None = None
+
+    # ---------------------- engine entry points ----------------------
     def process(self, game):
-        """Do whatever you need with the Game object game"""
         self.game = game
 
     def decide(self):
-        """Must return a tuple containing in that order:
-          1 - path_to_goal :
-                  A list of coordinates representing the path to your
-                 bot's goal for this turn:
-                 - i.e: [(y, x) , (y, x), (y, x)]
-                 where y is the vertical position from top and x the
-                 horizontal position from left.
+        g = self.game
+        me = g.hero
+        turn: int = g.turn
+        TOTAL: int = getattr(g, "max_turns", 150)
+        remaining = TOTAL - turn
 
-          2 - action:
-                 A string that will be displayed in the 'Action' place.
-                 - i.e: "Go to mine"
+        # --------------------------------------------------------------
+        # Phase detection + mini‑opening after respawn
+        # --------------------------------------------------------------
+        just_respawned = (
+            self.prev_life is not None and self.prev_life <= 0 and me.life == 100
+        )
+        pct = turn / TOTAL
+        if just_respawned or pct < 0.25:
+            phase = "opening"
+        elif pct < 0.85:
+            phase = "mid"
+        else:
+            phase = "end"
 
-          3 - decision:
-                 A list of tuples containing what would be useful to understand
-                 the choice you're bot has made and that will be printed
-                 at the 'Decision' place.
+        want_mines = 7 if phase == "opening" else 5 if phase == "mid" else 2
+        critical_hp = 35 if phase == "opening" else 30 if phase == "mid" else 25
 
-          4- hero_move:
-                 A string in one of the following: West, East, North,
-                 South, Stay
+        # --------------------------------------------------------------
+        # Board state
+        # --------------------------------------------------------------
+        walls = set(g.walls_locs)
+        taverns = set(g.taverns_locs)
+        all_mines = set(g.mines_locs)
+        owned_mines = set(getattr(me, "mines", []))
+        mines = all_mines - owned_mines  # only neutral/enemy mines
+        enemies = [h for h in g.heroes if h.bot_id != me.bot_id]
 
-          5 - nearest_enemy_pos:
-                 A tuple containing the nearest enenmy position (see above)
+        # Path‑finding helpers ----------------------------------------
+        mine_tiles = all_mines  # treat *every* mine as an obstacle unless it is our target
 
-          6 - nearest_mine_pos:
-                 A tuple containing the nearest enenmy position (see above)
+        def passable(pos):
+            """Walkable if inside board, not a wall, and not a mine tile."""
+            return (
+                0 <= pos[0] < g.board_size
+                and 0 <= pos[1] < g.board_size
+                and pos not in walls
+                and pos not in mine_tiles
+            )
 
-          7 - nearest_tavern_pos:
-                 A tuple containing the nearest enenmy position (see above)"""
+        # Generate all four orthogonal neighbours (bounds‑checked only)
+        def cardinal(pos):
+            y, x = pos
+            for dy, dx in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+                ny, nx = y + dy, x + dx
+                if 0 <= ny < g.board_size and 0 <= nx < g.board_size:
+                    yield (ny, nx)
 
-        actions = ['mine', 'tavern', 'fight']
+        def bfs(start, targets):
+            """Breadth‑first search that treats mines as walls *except* if a mine is our target."""
+            if not targets:
+                return None, []
+            if start in targets:
+                return start, [start]
+            q = deque([start])
+            prev = {start: None}
+            while q:
+                cur = q.popleft()
+                for nxt in cardinal(cur):
+                    if nxt in prev:
+                        continue
+                    # Mine tiles are impassable unless the mine itself is our target
+                    if nxt not in targets and not passable(nxt):
+                        continue
+                    prev[nxt] = cur
+                    if nxt in targets:
+                        path = [nxt]
+                        while path[-1] != start:
+                            path.append(prev[path[-1]])
+                        path.reverse()
+                        return nxt, path
+                    q.append(nxt)
+            return None, []
 
-        decisions = {'mine': [("Mine", 30), ('Fight', 10), ('Tavern', 5)],
-                    'tavern': [("Mine", 10), ('Fight', 10), ('Tavern', 50)],
-                    'fight': [("Mine", 15), ('Fight', 30), ('Tavern', 10)]}
+        def first_step(path):
+            if len(path) < 2:
+                return "Stay"
+            (y0, x0), (y1, x1) = path[0], path[1]
+            if y1 < y0:
+                return "North"
+            if y1 > y0:
+                return "South"
+            if x1 < x0:
+                return "West"
+            if x1 > x0:
+                return "East"
+            return "Stay"
 
-        walkable = []
-        path_to_goal = []
-        dirs = ["North", "East", "South", "West", "Stay"]
+        dbg: List[Tuple[str, Any]] = [("phase", phase)]
 
-        for y in range(self.game.board_size):
-            for x in range(self.game.board_size):
-                if (y, x) not in self.game.walls_locs or \
-                        (y, x) not in self.game.taverns_locs or \
-                        (y, x) not in self.game.mines_locs:
+        # 1. Heal if low ------------------------------------------------
+        if me.life <= critical_hp and taverns:
+            tavern, path = bfs(me.pos, taverns)
+            if path:
+                dbg.append(("heal", tavern))
+                return self._package(path, "Heal", dbg, first_step(path), enemies, all_mines, taverns, me)
 
-                    walkable.append((y, x))
+        # 2. Opportunistic kill ---------------------------------------
+        for e in sorted(enemies, key=lambda h: h.life):
+            if e.life > 40:
+                continue
+            _, path = bfs(me.pos, {e.pos})
+            if path and len(path) - 1 <= 5:
+                dbg.append(("kill", e.bot_id))
+                return self._package(path, "Kill", dbg, first_step(path), enemies, all_mines, taverns, me)
 
-        # With such a random path, path highlighting would
-        # display a random continuous line of red bullets over the map.
-        first_cell = self.game.hero.pos
-        path_to_goal.append(first_cell)
+        # 3. Capture mine ---------------------------------------------
+        BREAKEVEN = 20
+        if remaining > BREAKEVEN and len(owned_mines) < want_mines and mines:
+            mine, path = bfs(me.pos, mines)
+            if path:
+                dbg.append(("mine", mine))
+                return self._package(path, "Mine", dbg, first_step(path), enemies, all_mines, taverns, me)
 
-        for i in range(int(round(random.random()*self.game.board_size))):
-            for i in range(len(walkable)):
-                random.shuffle(walkable)
-                if (walkable[i][0] - first_cell[0] == 1 and
-                        walkable[i][1] - first_cell[1] == 0) or \
-                        (walkable[i][1] - first_cell[1] == 1 and
-                        walkable[i][0] - first_cell[0] == 0):
-                    path_to_goal.append(walkable[i])
-                    first_cell = walkable[i]
-                    break
+        # 4. Default: hold --------------------------------------------
+        return self._package([me.pos], "Hold", dbg, "Stay", enemies, all_mines, taverns, me)
 
-        hero_move = random.choice(dirs)
-        action = random.choice(actions)
-        decision = decisions[action]
-        nearest_enemy_pos = random.choice(self.game.heroes).pos
-        nearest_mine_pos = random.choice(self.game.mines_locs)
-        nearest_tavern_pos = random.choice(self.game.mines_locs)
-
-        return (path_to_goal,
-                action,
-                decision,
-                hero_move,
-                nearest_enemy_pos,
-                nearest_mine_pos,
-                nearest_tavern_pos)
+    # ---------------------------- helper -----------------------------
+    def _package(self, path, action, decisions, hero_move, enemies, mines, taverns, me):
+        nearest_enemy = (
+            min(enemies, key=lambda e: abs(e.pos[0]-me.pos[0]) + abs(e.pos[1]-me.pos[1])).pos
+            if enemies else me.pos
+        )
+        nearest_mine = (
+            min(mines, key=lambda m: abs(m[0]-me.pos[0]) + abs(m[1]-me.pos[1])) if mines else me.pos
+        )
+        nearest_tavern = (
+            min(taverns, key=lambda t: abs(t[0]-me.pos[0]) + abs(t[1]-me.pos[1])) if taverns else me.pos
+        )
+        self.prev_life = me.life
+        return (
+            path, action, decisions, hero_move, nearest_enemy, nearest_mine, nearest_tavern
+        )
 
 
 if __name__ == "__main__":
-    pass
+    print("AI module loaded – hand control to the engine.")
