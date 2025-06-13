@@ -1,20 +1,24 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Vindinium heuristic AI — **v3.0: moves again!**
-==============================================
+Vindinium heuristic AI — **v3.2: marginal‑value mines & distance penalty**
+=======================================================================
 
-Bug‑fix release — the previous version refused to walk onto mine tiles, so it
-sat still until an enemy wandered next to it.
+Two strategy tweaks requested:
 
-Key fixes
----------
-* **passable()** now allows stepping onto mine tiles (required to capture them).
-* **Mine target list** excludes mines you already own, preventing re‑targeting.
-* Simplified capture logic: always compute a BFS path and move towards the
-  chosen mine; no more special‑case “stay still if adjacent”.
+1. **No hard mine cap.**  We now capture a mine whenever its *marginal value*
+   (remaining turns minus rough breakeven) is positive, instead of stopping at
+   7/5/2.
+2. **Distance penalty.**  The farther the mine, the less attractive.  The rule
+   used is
 
-No external dependencies (pure std‑lib).
+   ```python
+   worth = remaining_turns – path_len – 10
+   ```
+   …so a mine one step away “pays for itself” if ≥ 10 turns remain; a mine 6
+   steps away needs ≥ 16 turns, etc.
+
+No other behaviour changed.  Still pure standard‑library.
 """
 
 from collections import deque
@@ -53,7 +57,6 @@ class AI:
         else:
             phase = "end"
 
-        want_mines = 7 if phase == "opening" else 5 if phase == "mid" else 2
         critical_hp = 35 if phase == "opening" else 30 if phase == "mid" else 25
 
         # --------------------------------------------------------------
@@ -78,7 +81,6 @@ class AI:
                 and pos not in mine_tiles
             )
 
-        # Generate all four orthogonal neighbours (bounds‑checked only)
         def cardinal(pos):
             y, x = pos
             for dy, dx in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
@@ -99,7 +101,6 @@ class AI:
                 for nxt in cardinal(cur):
                     if nxt in prev:
                         continue
-                    # Mine tiles are impassable unless the mine itself is our target
                     if nxt not in targets and not passable(nxt):
                         continue
                     prev[nxt] = cur
@@ -144,13 +145,15 @@ class AI:
                 dbg.append(("kill", e.bot_id))
                 return self._package(path, "Kill", dbg, first_step(path), enemies, all_mines, taverns, me)
 
-        # 3. Capture mine ---------------------------------------------
-        BREAKEVEN = 20
-        if remaining > BREAKEVEN and len(owned_mines) < want_mines and mines:
+        # 3. Capture mine (marginal‑value rule) ------------------------
+        if mines:
             mine, path = bfs(me.pos, mines)
             if path:
-                dbg.append(("mine", mine))
-                return self._package(path, "Mine", dbg, first_step(path), enemies, all_mines, taverns, me)
+                path_len = len(path) - 1
+                worth = remaining - path_len - 10  # 10‑turn breakeven + distance penalty
+                if worth > 0:
+                    dbg.append(("mine", mine, "worth", worth))
+                    return self._package(path, "Mine", dbg, first_step(path), enemies, all_mines, taverns, me)
 
         # 4. Default: hold --------------------------------------------
         return self._package([me.pos], "Hold", dbg, "Stay", enemies, all_mines, taverns, me)
