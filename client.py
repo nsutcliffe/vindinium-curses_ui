@@ -97,7 +97,7 @@ class Client:
             config_parser.add_section("game")
             with open(config_file_name, "w") as config_file:
                 for key, value in self.config.__dict__.items():
-                    config_parser.set("game", key, value)
+                    config_parser.set("game", key, str(value))
                 config_parser.write(config_file)
         except (IOError, configparser.Error) as e:
             self.gui.quit_ui()
@@ -248,14 +248,18 @@ class Client:
             # start a new game
             if self.bot.running:
                 self.start_game()
+                if not self.running:  # If game failed to start, skip to next game
+                    continue
+                    
                 gold = 0
                 winner = ("Noone", -1)
-                for player in self.bot.game.heroes:
-                    if int(player.gold) > gold:
-                        winner = (player.name, player.bot_id)
-                        gold = int(player.gold)
-                if winner[1] == self.bot.game.hero.bot_id:
-                    self.victory += 1
+                if self.bot.game and hasattr(self.bot.game, 'heroes'):
+                    for player in self.bot.game.heroes:
+                        if int(player.gold) > gold:
+                            winner = (player.name, player.bot_id)
+                            gold = int(player.gold)
+                    if winner[1] == self.bot.game.hero.bot_id:
+                        self.victory += 1
                 self.pprint("* " + winner[0] + " wins. ******************")
                 self.gui.display_summary(str(i+1) + "/" + str(self.config.number_of_games),
                                         str(self.victory) + "/" + str(i+1),
@@ -298,12 +302,35 @@ class Client:
             # May raise error if self.get_new_state() returns
             # no data or inconsistent data (network problem)
             self.state = self.get_new_game_state()
+            if self.state is None:
+                self.pprint("Failed to get game state. Please check the error messages above.")
+                self.running = False
+                return
+                
+            # Debug the state structure
+            self.pprint("Game state structure:")
+            self.pprint(f"Keys in state: {list(self.state.keys())}")
+            if 'game' in self.state:
+                self.pprint(f"Keys in game: {list(self.state['game'].keys())}")
+            if 'hero' in self.state:
+                self.pprint(f"Keys in hero: {list(self.state['hero'].keys())}")
+            
+            # Initialize the bot's game state
+            self.bot.process_game(self.state)
+                
             self.states.append(self.state)
-            self.pprint("Playing at: " + self.state['viewUrl'])
+            try:
+                self.pprint("Playing at: " + self.state['viewUrl'])
+            except KeyError as e:
+                self.pprint(f"Error accessing viewUrl: {e}")
+                self.pprint("State structure:", self.state)
+                self.running = False
+                return
         except (KeyError, TypeError) as e:
             # We can not play a game without a state
             self.pprint("Error: Please verify your settings.")
             self.pprint("Settings:", self.config.__dict__)
+            self.pprint("Error details:", str(e))
             self.running = False
             return
         for i in range(self.config.number_of_turns + 1):
@@ -402,16 +429,60 @@ class Client:
             raise Exception('Unknown game mode')
         # Wait for 10 minutes
         try:
-            r = self.session.post(self.config.server_url + api_endpoint, params, timeout=10*60)
+            full_url = self.config.server_url + api_endpoint
+            self.pprint(f"Connecting to: {full_url}")
+            self.pprint(f"With parameters: {params}")
+            
+            # Set headers to expect JSON response
+            headers = {
+                'Accept': 'application/json',
+                'Content-Type': 'application/x-www-form-urlencoded'
+            }
+            
+            r = self.session.post(full_url, params, headers=headers, timeout=10*60)
+            self.pprint(f"Response status code: {r.status_code}")
+            self.pprint(f"Response headers: {dict(r.headers)}")
+            
             if r.status_code == 200:
-                return r.json()
+                try:
+                    response_json = r.json()
+                    self.pprint("Successfully parsed JSON response")
+                    return response_json
+                except ValueError as e:
+                    self.pprint("Error parsing JSON response:")
+                    self.pprint(r.text[:200] + "..." if len(r.text) > 200 else r.text)
+                    self.running = False
+                    return None
             else:
-                self.pprint("Error when creating the game:", str(r.status_code))
+                self.pprint(f"Error when creating the game: HTTP {r.status_code}")
+                self.pprint("Server response:")
+                self.pprint(r.text[:200] + "..." if len(r.text) > 200 else r.text)
+                self.pprint("\nPlease check:")
+                self.pprint("1. The server URL is correct")
+                self.pprint("2. The server is running and accessible")
+                self.pprint("3. Your API key is valid")
                 self.running = False
-                self.pprint(r.text)
+                return None
         except requests.ConnectionError as e:
-            self.pprint("Error when creating the game:", e)
+            self.pprint("Connection error when creating the game:")
+            self.pprint(str(e))
+            self.pprint("\nPlease check:")
+            self.pprint("1. The server URL is correct")
+            self.pprint("2. The server is running and accessible")
+            self.pprint("3. Your internet connection is working")
             self.running = False
+            return None
+        except requests.Timeout as e:
+            self.pprint("Timeout when creating the game:")
+            self.pprint(str(e))
+            self.pprint("\nThe server took too long to respond. Please try again.")
+            self.running = False
+            return None
+        except Exception as e:
+            self.pprint("Unexpected error when creating the game:")
+            self.pprint(str(e))
+            self.running = False
+            return None
 
     def is_game_over(self):
         """Return True if game defined by state is over"""

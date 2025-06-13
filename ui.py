@@ -597,9 +597,17 @@ class tui:
 
     def append_log(self, data):
         """Append log with new data """
-        for i in range(0, len(str(data)), self.LOG_W - 2):
-            """Cut string to parts with appropriate length"""
-            self.log_entries.append(str(data)[i:i+self.LOG_W - 2])
+        # Convert data to string and clean it
+        data_str = str(data)
+        # Remove HTML tags and clean up whitespace
+        data_str = re.sub(r'<[^>]+>', '', data_str)
+        data_str = re.sub(r'\s+', ' ', data_str).strip()
+        
+        # Split into lines that fit the window width
+        for i in range(0, len(data_str), self.LOG_W - 2):
+            line = data_str[i:i+self.LOG_W - 2]
+            if line.strip():  # Only add non-empty lines
+                self.log_entries.append(line)
         self.purge_log()
         self.display_log()
 
@@ -615,22 +623,24 @@ class tui:
             for i in range(1, self.LOG_H - 2):
                 self.log_win.hline(i, 1, " ", self.LOG_W - 2)
                 try:
-                    attr = 0
-                    regexp = re.compile('Error')
-                    if regexp.search(self.log_entries[i]) is not None:
-                        attr = curses.color_pair(3) + curses.A_BOLD
-                    self.log_win.addstr(i, 1, self.log_entries[i], attr)
+                    if i < len(self.log_entries):
+                        attr = 0
+                        regexp = re.compile('Error')
+                        if regexp.search(self.log_entries[i]) is not None:
+                            attr = curses.color_pair(3) + curses.A_BOLD
+                        # Ensure the line fits in the window
+                        line = self.log_entries[i][:self.LOG_W - 2]
+                        self.log_win.addstr(i, 1, line, attr)
                 except IndexError:
                     # No more entries in log_entries
                     pass
                 except Exception as e:
                     self.quit_ui()
-                    print (e)
-                    print ("Error at display_log. i=", i, \
-                            "log entry:", self.log_entries[i], \
-                            "attr:", attr, \
-                            "LOG_H:", self.LOG_H)
+                    print(f"Error at display_log: {str(e)}")
+                    print(f"i={i}, log entry length={len(self.log_entries[i]) if i < len(self.log_entries) else 'N/A'}")
+                    print(f"LOG_W={self.LOG_W}, LOG_H={self.LOG_H}")
                     quit(1)
+
 # Setup windows --------------------------------------------------------
     def ask_action(self):
         """Return the inputed value"""
@@ -846,8 +856,8 @@ class tui:
             offset_2 = 17
         self.menu_win.addstr(10, offset + offset_2, game_mode.upper()+" MODE", curses.A_BOLD)
         self.menu_win.addstr(13, offset + 6, "Server URL:", curses.A_BOLD)
-        curses.textpad.rectangle(self.menu_win, 12, offset + 18, 14, offset + 48)
-        self.input_win = self.menu_win.subwin(1, 29, 13, offset + 19)
+        curses.textpad.rectangle(self.menu_win, 12, offset + 18, 14, offset + 78)  # Increased width from 48 to 78
+        self.input_win = self.menu_win.subwin(1, 59, 13, offset + 19)  # Increased width from 29 to 59
         self.input_win.bkgd(curses.color_pair(4) + curses.A_REVERSE)
         self.input_win.addstr(0, 0, server_url)
         input_pan = curses.panel.new_panel(self.input_win)
