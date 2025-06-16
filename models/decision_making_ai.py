@@ -11,16 +11,6 @@ from models.ai_base import AIBase
 class AI(AIBase):
     """Horizon‑aware, greedy Vindinium bot."""
 
-    def __init__(self, key="UnknownDecisionMakingAI"):
-        super().__init__(key)
-
-    def clone_me(self):
-        """Create a clone of the AI instance."""
-        return AI(self.key)
-
-    def process(self, game: Game):
-        self.game = game
-
     def decide(self):
         g = self.game
         me = g.hero  # type: ignore [assignment]
@@ -105,7 +95,7 @@ class AI(AIBase):
         if me.life <= critical_hp and taverns:
             tavern, path = bfs(me.pos, taverns)
             dbg.append(("heal@", tavern))
-            return self._package(path, "Heal", dbg, first_step(path), enemies, mines_all, taverns, me)
+            return self._package(path, "Heal", dbg, first_step(path))
 
         # --------------------------------------------------------------
         # 2. Opportunistic kill (≤40 HP enemy within 5 steps)
@@ -115,7 +105,7 @@ class AI(AIBase):
             _, path = bfs(me.pos, {e.pos})
             if path and len(path) - 1 <= 5:
                 dbg.append(("kill", e.bot_id))
-                return self._package(path, "Kill", dbg, first_step(path), enemies, mines_all, taverns, me)
+                return self._package(path, "Kill", dbg, first_step(path))
 
         # --------------------------------------------------------------
         # 3. Capture mine (ROI‑aware)
@@ -123,39 +113,8 @@ class AI(AIBase):
         if remaining > BREAKEVEN and len(my_mines) < want_mines and mines:
             mine, path = bfs(me.pos, mines)
             dbg.append(("mine@", mine))
-            return self._package(path, "Mine", dbg, first_step(path), enemies, mines_all, taverns, me)
+            return self._package(path, "Mine", dbg, first_step(path))
 
         # --------------------------------------------------------------
         # 4. Default – hold position
-        return self._package([me.pos], "Hold", dbg, "Stay", enemies, mines_all, taverns, me)
-
-    # ------------------------------------------------------------------
-    # Tuple packaging
-    # ------------------------------------------------------------------
-
-    def _package(self, path, action, decisions, hero_move, enemies, mines_all, taverns, me):
-        nearest_enemy = (
-            min(enemies, key=lambda e: abs(e.pos[0] - me.pos[0]) + abs(e.pos[1] - me.pos[1])).pos
-            if enemies
-            else me.pos
-        )
-        nearest_mine = (
-            min(mines_all, key=lambda m: abs(m[0] - me.pos[0]) + abs(m[1] - me.pos[1]))
-            if mines_all
-            else me.pos
-        )
-        nearest_tavern = (
-            min(taverns, key=lambda t: abs(t[0] - me.pos[0]) + abs(t[1] - me.pos[1]))
-            if taverns
-            else me.pos
-        )
-        self.prev_life = me.life  # update for next turn
-        return (
-            path,
-            action,
-            decisions,
-            hero_move,
-            nearest_enemy,
-            nearest_mine,
-            nearest_tavern,
-        )
+        return self._package([me.pos], "Hold", dbg, "Stay")
