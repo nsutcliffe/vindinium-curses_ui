@@ -1,5 +1,6 @@
 import ast
 import configparser
+import json
 import os
 import select
 import sys
@@ -22,7 +23,7 @@ class ClientWithSaveAndLoad:
         self.running = True
         self.game_url = None
         self.config = config
-        self.ai = config.ai if config.ai else DecisionMakingAI.AI()
+        self.ai = config.ai if config.ai else decision_making_ai.AI()
         self.bot = Bot(brain=self.ai)
         self.states = []
         self.delay = config.delay
@@ -111,7 +112,8 @@ class ClientWithSaveAndLoad:
                     coma = "]"
                 printable = printable + str(k) + ": " + str(v) + coma
                 a = a + 1
-        print(printable)
+
+        print("Event by {} : {}".format(self.ai.name, printable))
 
     def get_bot(self):
         return self.bot.clone_me()
@@ -197,12 +199,12 @@ class BasicClient(ClientWithSaveAndLoad):
                 return
 
             # Debug the state structure
-            self.pprint("Game state structure:")
-            self.pprint(f"Keys in state: {list(self.state.keys())}")
-            if 'game' in self.state:
-                self.pprint(f"Keys in game: {list(self.state['game'].keys())}")
-            if 'hero' in self.state:
-                self.pprint(f"Keys in hero: {list(self.state['hero'].keys())}")
+            # self.pprint("Game state structure:")
+            # self.pprint(f"Keys in state: {list(self.state.keys())}")
+            # if 'game' in self.state:
+            #     self.pprint(f"Keys in game: {list(self.state['game'].keys())}")
+            # if 'hero' in self.state:
+            #     self.pprint(f"Keys in hero: {list(self.state['hero'].keys())}")
 
             # Initialize the bot's game state
             self.bot.process_game(self.state)
@@ -271,7 +273,7 @@ class BasicClient(ClientWithSaveAndLoad):
         try:
             full_url = self.config.server_url + api_endpoint
             self.pprint(f"Connecting to: {full_url}")
-            self.pprint(f"With parameters: {params}")
+            # self.pprint(f"With parameters: {params}")
             headers = {
                 'Accept': 'application/json',
                 'Content-Type': 'application/x-www-form-urlencoded'

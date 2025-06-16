@@ -32,7 +32,7 @@ def plot_path_on_map(grid, path, start_char='@', final_path_marker='*'):
     return ["".join(row) for row in mutable_grid]
 
 
-def replace_map_values(map_grid, replacements):
+def replace_map_values(map_grid, replacements, new_char):
     """
     Replaces characters at specified coordinates in a map grid.
 
@@ -55,7 +55,7 @@ def replace_map_values(map_grid, replacements):
     # Convert the list of strings to a mutable list of lists of characters
     mutable_grid = [list(row) for row in map_grid]
 
-    for r, c, new_char in replacements:
+    for r, c in replacements:
         # Validate coordinates
         if 0 <= r < rows and 0 <= c < cols:
             mutable_grid[r][c] = new_char

@@ -18,7 +18,7 @@ if __name__ == "__main__":
         '$############$',
         '###X######X###'
     ]
-    game_map = replace_map_values(game_map, [(0, 1, 'u')])
+    game_map = replace_map_values(game_map, [(0, 1)], 'u')
 
     # Define what's walkable for general path movement
     # Based on the prompt: "#": wall, "T": tavern, "$": Mine, "H": Hero

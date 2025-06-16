@@ -299,13 +299,13 @@ class Client:
                 return
                 
             # Debug the state structure
-            self.pprint("Game state structure:")
-            self.pprint(f"Keys in state: {list(self.state.keys())}")
-            if 'game' in self.state:
-                self.pprint(f"Keys in game: {list(self.state['game'].keys())}")
-            if 'hero' in self.state:
-                self.pprint(f"Keys in hero: {list(self.state['hero'].keys())}")
-            
+            # self.pprint("Game state structure:")
+            # self.pprint(f"Keys in state: {list(self.state.keys())}")
+            # if 'game' in self.state:
+            #     self.pprint(f"Keys in game: {list(self.state['game'].keys())}")
+            # if 'hero' in self.state:
+            #     self.pprint(f"Keys in hero: {list(self.state['hero'].keys())}")
+            #
             # Initialize the bot's game state
             self.bot.process_game(self.state)
                 
@@ -431,13 +431,13 @@ class Client:
             }
             
             r = self.session.post(full_url, params, headers=headers, timeout=10*60)
-            self.pprint(f"Response status code: {r.status_code}")
-            self.pprint(f"Response headers: {dict(r.headers)}")
+            # self.pprint(f"Response status code: {r.status_code}")
+            # self.pprint(f"Response headers: {dict(r.headers)}")
             
             if r.status_code == 200:
                 try:
                     response_json = r.json()
-                    self.pprint("Successfully parsed JSON response")
+                    # self.pprint("Successfully parsed JSON response")
                     return response_json
                 except ValueError as e:
                     self.pprint("Error parsing JSON response:")

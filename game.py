@@ -17,8 +17,8 @@ Modules
   then `decide()` each turn.
 """
 
-from collections import deque
-from typing import Any, List, Tuple
+from typing import List, Tuple
+
 
 # ---------------------------------------------------------------------------
 #  Domain objects
@@ -33,6 +33,7 @@ class Hero:
         self.life: int = hero_dict["life"]
         self.gold: int = hero_dict["gold"]
         self.pos: Tuple[int, int] = (hero_dict["pos"]["x"], hero_dict["pos"]["y"])
+        self.reversePos: Tuple[int, int] = self.pos
         self.spawn_pos: Tuple[int, int] = (
             hero_dict["spawnPos"]["x"],
             hero_dict["spawnPos"]["y"],
@@ -86,7 +87,7 @@ class Game:
     def process_game(self, game):
         """Process the game data"""
         process = {'board': self.process_board,
-                    'heroes': self.process_heroes}
+                   'heroes': self.process_heroes}
         self.turn = game['turn']
         self.max_turns = game['maxTurns']
         self.finished = game['finished']
@@ -103,10 +104,10 @@ class Game:
         map_line = ""
         char = None
         for y in range(0, len(tiles), self.board_size * 2):
-            line = tiles[y:y+self.board_size*2]
+            line = tiles[y:y + self.board_size * 2]
             for x in range(0, len(line), 2):
-                tile = line[x:x+2]
-                tile_coords = (y//self.board_size//2, x//2)
+                tile = line[x:x + 2]
+                tile_coords = (y // self.board_size // 2, x // 2)
                 if tile[0] == " ":
                     # It's passable
                     char = " "
@@ -155,7 +156,6 @@ class Game:
             if line[hero_obj.spawn_pos[0]] not in {"@", "H"}:
                 line[hero_obj.spawn_pos[0]] = "X"
             self.board_map[hero_obj.spawn_pos[1]] = "".join(line)
-
 
 
 # ---------------------------------------------------------------------------
