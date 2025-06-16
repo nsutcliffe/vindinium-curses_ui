@@ -28,10 +28,12 @@ from typing import List, Tuple, Any
 class AI:
     """Phase‑aware greedy Vindinium bot adaptive to any max‑turn setting."""
 
-    def __init__(self):
-        self.game: Any | None = None
-        self.prev_life: int | None = None
+    def __init__(self, key="UnknownHeuristicAI"):
+        super().__init__(key)
 
+    def clone_me(self):
+        """Create a clone of the AI instance."""
+        return AI(self.key)
     # ---------------------- engine entry points ----------------------
     def process(self, game):
         self.game = game

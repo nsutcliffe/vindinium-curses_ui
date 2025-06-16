@@ -3,7 +3,7 @@
 
 
 from game import Game
-from models import DecisionMakingAI
+from models import decision_making_ai
 
 DIRS = ["North", "East", "South", "West", "Stay"]
 ACTIONS = ["Go mine", "Go beer", "Go enemy"]
@@ -11,7 +11,7 @@ ACTIONS = ["Go mine", "Go beer", "Go enemy"]
 
 class Bot:
     """THis is your bot"""
-    def __init__(self, brain = DecisionMakingAI.AI()):
+    def __init__(self, brain = decision_making_ai.AI()):
         self.running = True
         self.state = {}
         self.game = None
@@ -33,6 +33,10 @@ class Bot:
         self.last_pos = None
         # The A.I, Skynet's rising !
         self.ai = brain
+
+    def clone_me(self):
+        """Create a clone of the bot instance"""
+        return Bot(self.ai.clone_me())
 
     def move(self, state):
         """Return store data provided by A.I

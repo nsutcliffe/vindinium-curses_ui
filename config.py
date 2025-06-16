@@ -4,7 +4,7 @@ class Config:
                  number_of_games=1,
                  number_of_turns=300,
                  map_name="m3",
-                 delay=0.5,
+                 delay=0.1,
                  ai=None,
                  key=None):
         self.game_mode = game_mode
@@ -27,5 +27,5 @@ class Config:
             map_name=config_dict.get('map_name', 'm3'),
             ai=config_dict.get('ai', None),
             key=config_dict.get('key', None),
-            delay=config_dict.get('delay', 0.5)
+            delay=config_dict.get('delay', 0.1)
         )

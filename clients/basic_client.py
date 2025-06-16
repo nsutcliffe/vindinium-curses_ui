@@ -9,7 +9,7 @@ import requests
 
 from bot import Bot
 from clients.tui_client import Config
-from models import DecisionMakingAI
+from models import decision_making_ai
 
 TIMEOUT = 15
 
@@ -114,7 +114,8 @@ class ClientWithSaveAndLoad:
         print(printable)
 
     def get_bot(self):
-        return self.bot
+        return self.bot.clone_me()
+
 
 
 class BasicClient(ClientWithSaveAndLoad):

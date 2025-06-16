@@ -5,16 +5,18 @@ from collections import deque
 from typing import Any, Tuple, List
 
 from game import Game
+from models.ai_base import AIBase
 
 
-class AI:
+class AI(AIBase):
     """Horizon‑aware, greedy Vindinium bot."""
 
-    def __init__(self):
-        self.game: Game | None = None
-        self.prev_life: int | None = None
+    def __init__(self, key="UnknownDecisionMakingAI"):
+        super().__init__(key)
 
-    # ---------------------- engine entry points ----------------------
+    def clone_me(self):
+        """Create a clone of the AI instance."""
+        return AI(self.key)
 
     def process(self, game: Game):
         self.game = game
@@ -157,4 +159,3 @@ class AI:
             nearest_mine,
             nearest_tavern,
         )
-
