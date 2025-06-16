@@ -5,6 +5,7 @@ import os
 import select
 import sys
 import time
+import traceback
 
 import requests
 
@@ -244,10 +245,10 @@ class BasicClient(ClientWithSaveAndLoad):
                 except Exception as e:
                     # Super error trap !
                     if self.log_win:
+                        print(f"Caught an error: {e}")
+                        print("\n--- Printing traceback with traceback.print_exc() ---")
+                        traceback.print_exc()
                         self.pprint("Error at client.start_game:", str(e))
-                        self.pprint(
-                            "If your code or your settings are not responsible of this error, please report this error to:")
-                        self.pprint("doug.letough@free.fr.")
                     self.running = False
                     return
                 if not self.is_game_over():
@@ -279,8 +280,8 @@ class BasicClient(ClientWithSaveAndLoad):
                 'Content-Type': 'application/x-www-form-urlencoded'
             }
             r = self.session.post(full_url, params, headers=headers, timeout=10 * 60)
-            self.pprint(f"Response status code: {r.status_code}")
-            self.pprint(f"Response headers: {dict(r.headers)}")
+            # self.pprint(f"Response status code: {r.status_code}")
+            # self.pprint(f"Response headers: {dict(r.headers)}")
             if r.status_code == 200:
                 try:
                     response_json = r.json()

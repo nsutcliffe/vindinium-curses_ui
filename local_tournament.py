@@ -2,7 +2,8 @@ import threading
 
 from clients.basic_client import BasicClient
 from clients.tui_client import Config
-from models import decision_making_ai, heuristic_ai, random_ai, survival_bot, tactical_ai
+from models import decision_making_ai, heuristic_ai, random_ai, survival_bot, tactical_ai, tactical_with_detour, \
+    forecasting_ai
 
 # Local tournament for Vindinium AIs
 # Configuration for the local tournament
@@ -13,7 +14,8 @@ from models import decision_making_ai, heuristic_ai, random_ai, survival_bot, ta
 # survival_bot: chvtv9cm
 # clone_me
 ai_configs = [
-    {"ai": decision_making_ai.AI("decisionmaking1", "qarfl5z8"), "key": "qarfl5z8"},
+    # {"ai": tactical_with_detour.AI("tactical_with_detour", "9fozp368"), "key": "9fozp368"},
+    {"ai": forecasting_ai.AI("forecasting_ai_1", "fkbkkzfh"), "key": "fkbkkzfh"},
     {"ai": heuristic_ai.AI("heuristic1", "hi4uk6g8"), "key": "hi4uk6g8"},
     {"ai": tactical_ai.AI("tactical1", "bar7j5gv"), "key": "bar7j5gv"},
     {"ai": survival_bot.AI("survivalbot1", "gntccajo"), "key": "gntccajo"}

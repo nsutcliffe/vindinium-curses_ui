@@ -1,56 +1,6 @@
-from enum import Enum
-
-from models.ai_base import AIBase
+from models.ai_base import AIBase, Actions, MapElements, Directions
 from utils.grid_helpers import replace_map_values
 from utils.path_finder import bfs_from_xy_to_xy, bfs_from_xy_to_nearest_char
-
-
-class MapElements(str, Enum):
-    OWNED_MINE = 'O'
-    HERO = '@'
-    MINE = '$'
-    ENEMY = 'H'
-    TAVERN = 'T'
-
-
-class Directions(str, Enum):
-    NORTH = "North"
-    SOUTH = "South"
-    EAST = "East"
-    WEST = "West"
-    STAY = "Stay"
-
-    @staticmethod
-    def get_direction(start_pos, next):
-        start_row, start_col = start_pos
-        next_row, next_col = next
-
-        dr = next_row - start_row
-        dc = next_col - start_col
-
-        if dr == -1 and dc == 0:
-            return "North"
-        elif dr == 1 and dc == 0:
-            return "South"
-        elif dr == 0 and dc == 1:
-            return "East"
-        elif dr == 0 and dc == -1:
-            return "West"
-        elif dr == 0 and dc == 0:
-            return "Stay"
-        else:
-            # This handles diagonal moves or jumps of more than one cell
-            return "Invalid Move"
-
-
-class Actions(str, Enum):
-    NEAREST_TAVERN = "NEAREST_TAVERN"
-    ENDGAME_TAVERN = "ENDGAME_TAVERN"
-    TAKE_NEAREST_MINE = "TAKE_NEAREST_MINE"
-    ATTACK_NEAREST = "ATTACK_NEAREST"
-    ATTACK_RICHEST = "ATTACK_RICHEST"
-    ATTACK_WEAKEST = "ATTACK_WEAKEST"
-    WAIT = "WAIT"
 
 
 class AI(AIBase):
@@ -107,20 +57,22 @@ class AI(AIBase):
 
         def opportunistic_kill_if():
             path, distance = bfs_from_xy_to_nearest_char(game_map, hero.pos, MapElements.ENEMY)
-            enemy_position = path[-1]
-            enemy = [e for e in enemies if
-                     e.pos[0] == enemy_position[0] and e.pos[1] == enemy_position[1]]
-            if distance < 4 and len(enemy) > 0 and enemy[0].life <= hero.life:
-                return path, Actions.ATTACK_NEAREST
+            if len(path) > 0:
+                enemy_position = path[-1]
+                enemy = [e for e in enemies if
+                         e.pos[0] == enemy_position[0] and e.pos[1] == enemy_position[1]]
+                if distance < 4 and len(enemy) > 0 and enemy[0].life <= hero.life:
+                    return path, Actions.ATTACK_NEAREST
             return None
 
         def attack_nearest_if():
             path, distance = bfs_from_xy_to_nearest_char(game_map, hero.pos, MapElements.ENEMY)
-            enemy_position = path[-1]
-            enemy = [e for e in enemies if
-                     e.pos[0] == enemy_position[0] and e.pos[1] == enemy_position[1]]
-            if distance < remaining_turns and len(enemy) > 0 and enemy[0].life <= hero.life:
-                return path, Actions.ATTACK_NEAREST
+            if len(path) > 0:
+                enemy_position = path[-1]
+                enemy = [e for e in enemies if
+                         e.pos[0] == enemy_position[0] and e.pos[1] == enemy_position[1]]
+                if distance < remaining_turns and len(enemy) > 0 and enemy[0].life <= hero.life:
+                    return path, Actions.ATTACK_NEAREST
             return None
 
         def attack_weakest_if():
@@ -138,7 +90,7 @@ class AI(AIBase):
             return None
 
         def wait():
-            return [], Actions.WAIT
+            return [hero.pos, hero.pos], Actions.WAIT
 
         policy_priority = [end_game_if,
                            go_to_tavern_if,
