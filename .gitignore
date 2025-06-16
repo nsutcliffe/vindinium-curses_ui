@@ -4,3 +4,7 @@
 .idea
 *un~
 venv/
+
+# MongoDB data files (keep structure but not actual data)
+docker/mongodb-data/*
+!docker/mongodb-data/.gitkeep

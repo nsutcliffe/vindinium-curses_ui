@@ -1,0 +1,10 @@
+# Exclude actual MongoDB data directory (too large and binary)
+mongodb-data/
+
+# Include database backups for Git persistence
+!db-backup/
+
+# Exclude temporary files
+*.tmp
+*.log
+
