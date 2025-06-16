@@ -3,16 +3,15 @@
 
 
 from game import Game
-import ai
-
+from models import DecisionMakingAI
 
 DIRS = ["North", "East", "South", "West", "Stay"]
 ACTIONS = ["Go mine", "Go beer", "Go enemy"]
 
 
-class Curses_ui_bot:
+class Bot:
     """THis is your bot"""
-    def __init__(self):
+    def __init__(self, brain = DecisionMakingAI.AI()):
         self.running = True
         self.state = {}
         self.game = None
@@ -33,7 +32,7 @@ class Curses_ui_bot:
         self.last_nearest_tavern_pos = None
         self.last_pos = None
         # The A.I, Skynet's rising !
-        self.ai = ai.AI()
+        self.ai = brain
 
     def move(self, state):
         """Return store data provided by A.I

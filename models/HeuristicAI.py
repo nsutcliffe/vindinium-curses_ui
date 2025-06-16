@@ -47,7 +47,7 @@ class AI:
         # Phase detection + mini‑opening after respawn
         # --------------------------------------------------------------
         just_respawned = (
-            self.prev_life is not None and self.prev_life <= 0 and me.life == 100
+                self.prev_life is not None and self.prev_life <= 0 and me.life == 100
         )
         pct = turn / TOTAL
         if just_respawned or pct < 0.25:
@@ -75,10 +75,10 @@ class AI:
         def passable(pos):
             """Walkable if inside board, not a wall, and not a mine tile."""
             return (
-                0 <= pos[0] < g.board_size
-                and 0 <= pos[1] < g.board_size
-                and pos not in walls
-                and pos not in mine_tiles
+                    0 <= pos[0] < g.board_size
+                    and 0 <= pos[1] < g.board_size
+                    and pos not in walls
+                    and pos not in mine_tiles
             )
 
         def cardinal(pos):
