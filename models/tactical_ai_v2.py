@@ -32,6 +32,27 @@ class AI(AIBase):
 
         critical_hp = 35 if phase == "opening" else 30 if phase == "mid" else 25
 
+        def calculate_mine_value(distance):
+            # Calculate if taking a mine is worth it based on remaining turns
+            cost = 20  # HP cost to take mine
+            turns_to_reach = distance
+            turns_earning = remaining_turns - turns_to_reach
+            if turns_earning <= 0:
+                return False
+            # Only take mine if we can earn back the HP cost in gold
+            return turns_earning >= cost
+
+        def defend_mines_if():
+            # Check if any enemy is close to our mines
+            for mine_pos in hero.mines:
+                for enemy in enemies:
+                    path, distance = bfs_from_xy_to_xy(game_map, enemy.pos, mine_pos)
+                    if distance < 3 and hero.life > enemy.life + distance:
+                        # Intercept enemy before they reach our mine
+                        intercept_path, _ = bfs_from_xy_to_xy(game_map, hero.pos, path[0])
+                        return intercept_path, Actions.DEFEND_MINE
+            return None
+
         def end_game_if():
             path, distance = bfs_from_xy_to_nearest_char(game_map, hero.pos, MapElements.TAVERN)
 
@@ -42,7 +63,7 @@ class AI(AIBase):
 
         def do_nearest_if():
             path, distance = bfs_from_xy_to_nearest_char(game_map, hero.pos, MapElements.MINE)
-            if distance < remaining_turns:
+            if distance < remaining_turns and calculate_mine_value(distance):
                 return path, Actions.TAKE_NEAREST_MINE
             else:
                 return None
@@ -50,10 +71,15 @@ class AI(AIBase):
         def attack_richest_if():
             richest = enemies_by_mines[0]
             path, distance = bfs_from_xy_to_xy(game_map, hero.pos, richest.pos)
+            # More aggressive attack if they have many mines
             if distance < remaining_turns and hero.life - distance - 1 >= richest.life and hero.life > critical_hp + distance * 5:
-                return path, Actions.ATTACK_RICHEST
-            else:
-                return None
+                # If they have many mines, be more aggressive
+                if richest.mine_count >= 3:
+                    return path, Actions.ATTACK_RICHEST
+                # Otherwise only attack if we're significantly stronger
+                elif hero.life > richest.life * 1.5:
+                    return path, Actions.ATTACK_RICHEST
+            return None
 
         def opportunistic_kill_if():
             path, distance = bfs_from_xy_to_nearest_char(game_map, hero.pos, MapElements.ENEMY)
@@ -84,7 +110,12 @@ class AI(AIBase):
 
         def go_to_tavern_if():
             path, distance = bfs_from_xy_to_nearest_char(game_map, hero.pos, MapElements.TAVERN)
-            if distance < remaining_turns and hero.life < critical_hp and (hero.mine_count > 0 or hero.gold > 0):
+            # Only go to tavern if we have enough gold and the heal is worth it
+            if (distance < remaining_turns and 
+                hero.life < critical_hp and 
+                hero.gold >= 2 and 
+                # Only heal if we'll get good value from the heal
+                (hero.life + 50 - distance) * hero.mine_count > 2):
                 return path, Actions.NEAREST_TAVERN
             return None
 
@@ -101,6 +132,7 @@ class AI(AIBase):
             return [hero.pos, hero.pos], Actions.WAIT
 
         policy_priority = [end_game_if,
+                           defend_mines_if,
                            go_to_tavern_if,
                            opportunistic_kill_if,
                            do_nearest_if,

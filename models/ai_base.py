@@ -50,7 +50,9 @@ class Actions(str, Enum):
     ATTACK_NEAREST = "ATTACK_NEAREST"
     ATTACK_RICHEST = "ATTACK_RICHEST"
     ATTACK_WEAKEST = "ATTACK_WEAKEST"
+    SUICIDE = "SUICIDE"
     WAIT = "WAIT"
+    DEFEND_MINE = "DEFEND_MINE"
 
 class AIBase(ABC):
     def __init__(self, name: str = "UnknownAIName", key: str = "UnknownKey"):
@@ -99,71 +101,13 @@ class AIBase(ABC):
         return self.game.hero
 
 
-    @staticmethod
-    def bfs(start, targets, game, walls, mines):
-        """Breadth‑first search that treats mines as walls *except* if a mine is our target."""
-        if not targets:
-            return None, []
-        if start in targets:
-            return start, [start]
-        q = deque([start])
-        prev = {start: None}
-        while q:
-            cur = q.popleft()
-            for nxt in AIBase.cardinal(cur, game):
-                if nxt in prev:
-                    continue
-                if nxt not in targets and not AIBase.passable(nxt, game, walls, mines):
-                    continue
-                prev[nxt] = cur
-                if nxt in targets:
-                    path = [nxt]
-                    while path[-1] != start:
-                        path.append(prev[path[-1]])
-                    path.reverse()
-                    return nxt, path
-                q.append(nxt)
-        return None, []
-
-    @staticmethod
-    def first_step(path):
-        if len(path) < 2:
-            return "Stay"
-        (y0, x0), (y1, x1) = path[0], path[1]
-        if y1 < y0:
-            return "North"
-        if y1 > y0:
-            return "South"
-        if x1 < x0:
-            return "West"
-        if x1 > x0:
-            return "East"
-        return "Stay"
-
-    @staticmethod
-    def passable(pos, game, walls, mine_tiles):
-        """Walkable if inside board, not a wall, and not a mine tile."""
-        return (
-                0 <= pos[0] < game.board_size
-                and 0 <= pos[1] < game.board_size
-                and pos not in walls
-                and pos not in mine_tiles
-        )
-
-    @staticmethod
-    def cardinal(pos, game):
-        y, x = pos
-        for dy, dx in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
-            ny, nx = y + dy, x + dx
-            if 0 <= ny < game.board_size and 0 <= nx < game.board_size:
-                yield (ny, nx)
 
     def _package(self, path, action, decisions, hero_move):
         me = self.hero()
         taverns = self.taverns()
         mines = self.mines()
         enemies = self.enemies()
-
+        print(f"{self.name}:  action: {action} hero_move: {hero_move}")
         nearest_enemy = (
             min(enemies, key=lambda e: abs(e.pos[0] - me.pos[0]) + abs(e.pos[1] - me.pos[1])).pos
             if enemies else me.pos

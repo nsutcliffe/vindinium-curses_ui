@@ -2,11 +2,6 @@ from enum import Enum
 import copy
 
 from models.ai_base import AIBase
-from utils.grid_helpers import replace_map_values
-from utils.path_finder import (
-    bfs_from_xy_to_xy,
-    bfs_from_xy_to_nearest_char
-)
 
 
 class MapElements(str, Enum):
@@ -134,7 +129,7 @@ class AI(AIBase):
                         continue
                     if (nr, nc) in visited:
                         continue
-                    if state.board_map[nr][nc] in ['#', 'X', MapElements.HERO, MapElements.TAVERN, MapElements.MINE]:
+                    if state.board_map[nr][nc] in ['#', 'X']:
                         continue
 
                     visited.add((nr, nc))
