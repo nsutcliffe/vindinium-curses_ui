@@ -12,6 +12,7 @@ services:
 
   vindinium:
     image: rutkai/vindinium
+    platform: linux/amd64
     container_name: vindinium
     ports:
       - "80:9000"
