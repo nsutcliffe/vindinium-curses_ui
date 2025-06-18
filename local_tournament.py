@@ -1,5 +1,6 @@
 import gc
 import threading
+import sys
 
 # Configure garbage collection
 gc.set_threshold(700, 10, 5)  # Increase thresholds to reduce collection frequency
@@ -29,6 +30,13 @@ base_config = dict(
     server_url="http://localhost",
     delay=0# Map name: "m1", "m2", "m3", "m4", "m5", or "m6"
 )
+
+def wait_for_enter():
+    """Simple cross-platform function to wait for Enter key press"""
+    print("Press Enter to launch the tournament...", end='', flush=True)
+    sys.stdin.readline()
+    print()  # New line after Enter
+
 if __name__ == "__main__":
     try:
         client_configs = [
@@ -36,7 +44,7 @@ if __name__ == "__main__":
         ]
         clients = [BasicClient(config) for config in client_configs]
 
-        input("Press Enter to launch the tournament...")
+        wait_for_enter()
 
         threads = []
         for c in clients:
