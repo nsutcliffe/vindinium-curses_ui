@@ -3,7 +3,6 @@
 
 
 from game import Game
-from models import decision_making_ai
 
 DIRS = ["North", "East", "South", "West", "Stay"]
 ACTIONS = ["Go mine", "Go beer", "Go enemy"]
@@ -11,7 +10,7 @@ ACTIONS = ["Go mine", "Go beer", "Go enemy"]
 
 class Bot:
     """THis is your bot"""
-    def __init__(self, brain = decision_making_ai.AI()):
+    def __init__(self, brain):
         self.running = True
         self.state = {}
         self.game = None

@@ -11,7 +11,6 @@ import requests
 
 from bot import Bot
 from clients.tui_client import Config
-from models import decision_making_ai
 
 TIMEOUT = 15
 
@@ -24,7 +23,7 @@ class ClientWithSaveAndLoad:
         self.running = True
         self.game_url = None
         self.config = config
-        self.ai = config.ai if config.ai else decision_making_ai.AI()
+        self.ai = config.ai
         self.bot = Bot(brain=self.ai)
         self.states = []
         self.delay = config.delay

@@ -12,35 +12,22 @@ from models import heuristic_ai, tactical_ai_v2, risk_reward_ai, murder_bot_work
 # Local tournament for Vindinium AIs
 # Configuration for the local tournament
 
-# heuristic1: h6d870j3
-# decisionmaking1: 0l2ymca1
-# random1: 7177z2hc
-# survival_bot: chvtv9cm
-# clone_me
 ai_configs = [
-    # {"ai": tactical_with_detour.AI("tactical_with_detour", "9fozp368"), "key": "9fozp368"},
-    # {"ai": forecasting_ai.AI("forecasting_ai_1", "fkbkkzfh"), "key": "fkbkkzfh"},
-    # {"ai": forecasting_ai.AI("dynamic_pr_1", "djt4l0fh"), "key": "djt4l0fh"},
 
-    # {"ai": plan_ahead_ai.AI("plan_ahead_1", "7wfi0qb3"), "key": "7wfi0qb3"},
     {"ai": heuristic_ai.AI("heuristic1", "rhjcaktk"), "key": "rhjcaktk"},
-    # {"ai": tactical_ai.AI("tactical_v1", "smzjvxeb"), "key": "smzjvxeb"},
-    # {"ai": survival_bot.AI("survivalbot1", "gntccajo"), "key": "gntccajo"}
     {"ai": tactical_ai_v2.AI("tactical_v2", "2c6zjpf2"), "key": "2c6zjpf2"},
     {"ai": risk_reward_ai.AI("risk_reward_v1", "afqfyt87"), "key": "afqfyt87"},
-    # {"ai": hybrid_ai.AI("hybrid_v1", "ns9g2r7m"), "key": "ns9g2r7m"},
-    # {"ai": pattern_ai.AI("pattern_v2", "68xhd70g"), "key": "68xhd70g"}
-    {"ai": murder_bot_working_copy.AI("murder_bot_v1", "59ndqpkf"), "key": "59ndqpkf"}
+    {"ai": murder_bot_working_copy.AI("murder_bot_v1", "mt5h908j"), "key": "mt5h908j"}
 
 ]
 
 base_config = dict(
     number_of_games=500,
     number_of_turns=100,
-    map_name="m6",  # Map name: "m1", "m2", "m3", "m4", "m5", or "m6"
+    map_name="m6",  
     game_mode="arena",
     server_url="http://localhost",
-    delay=0
+    delay=0# Map name: "m1", "m2", "m3", "m4", "m5", or "m6"
 )
 if __name__ == "__main__":
     try:
