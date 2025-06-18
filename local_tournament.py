@@ -1,5 +1,5 @@
-import threading
 import gc
+import threading
 
 # Configure garbage collection
 gc.set_threshold(700, 10, 5)  # Increase thresholds to reduce collection frequency
@@ -7,8 +7,7 @@ gc.disable()  # Disable automatic garbage collection during tournament
 
 from clients.basic_client import BasicClient
 from clients.tui_client import Config
-from models import decision_making_ai, heuristic_ai, random_ai, survival_bot, tactical_ai, \
-    forecasting_ai, plan_ahead_ai, tactical_ai_v2, risk_reward_ai, hybrid_ai, pattern_ai, murder_bot_working_copy
+from models import heuristic_ai, tactical_ai_v2, risk_reward_ai, murder_bot_working_copy
 
 # Local tournament for Vindinium AIs
 # Configuration for the local tournament
@@ -22,18 +21,16 @@ ai_configs = [
     # {"ai": tactical_with_detour.AI("tactical_with_detour", "9fozp368"), "key": "9fozp368"},
     # {"ai": forecasting_ai.AI("forecasting_ai_1", "fkbkkzfh"), "key": "fkbkkzfh"},
     # {"ai": forecasting_ai.AI("dynamic_pr_1", "djt4l0fh"), "key": "djt4l0fh"},
-    
+
     # {"ai": plan_ahead_ai.AI("plan_ahead_1", "7wfi0qb3"), "key": "7wfi0qb3"},
     {"ai": heuristic_ai.AI("heuristic1", "rhjcaktk"), "key": "rhjcaktk"},
-    #{"ai": tactical_ai.AI("tactical_v1", "smzjvxeb"), "key": "smzjvxeb"},
+    # {"ai": tactical_ai.AI("tactical_v1", "smzjvxeb"), "key": "smzjvxeb"},
     # {"ai": survival_bot.AI("survivalbot1", "gntccajo"), "key": "gntccajo"}
-     {"ai": tactical_ai_v2.AI("tactical_v2", "2c6zjpf2"), "key": "2c6zjpf2"},
-     {"ai": risk_reward_ai.AI("risk_reward_v1", "afqfyt87"), "key": "afqfyt87"},
+    {"ai": tactical_ai_v2.AI("tactical_v2", "2c6zjpf2"), "key": "2c6zjpf2"},
+    {"ai": risk_reward_ai.AI("risk_reward_v1", "afqfyt87"), "key": "afqfyt87"},
     # {"ai": hybrid_ai.AI("hybrid_v1", "ns9g2r7m"), "key": "ns9g2r7m"},
-    #{"ai": pattern_ai.AI("pattern_v2", "68xhd70g"), "key": "68xhd70g"}
+    # {"ai": pattern_ai.AI("pattern_v2", "68xhd70g"), "key": "68xhd70g"}
     {"ai": murder_bot_working_copy.AI("murder_bot_v1", "59ndqpkf"), "key": "59ndqpkf"}
-
-
 
 ]
 
