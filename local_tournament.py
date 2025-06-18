@@ -7,8 +7,8 @@ gc.disable()  # Disable automatic garbage collection during tournament
 
 from clients.basic_client import BasicClient
 from clients.tui_client import Config
-from models import decision_making_ai, heuristic_ai, random_ai, survival_bot, tactical_ai, tactical_with_detour, \
-    forecasting_ai, plan_ahead_ai, tactical_ai_v2, risk_reward_ai, hybrid_ai, pattern_ai, tactical_ai_v3, murder_bot_working_copy
+from models import decision_making_ai, heuristic_ai, random_ai, survival_bot, tactical_ai, \
+    forecasting_ai, plan_ahead_ai, tactical_ai_v2, risk_reward_ai, hybrid_ai, pattern_ai, murder_bot_working_copy
 
 # Local tournament for Vindinium AIs
 # Configuration for the local tournament
