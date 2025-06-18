@@ -30,6 +30,13 @@ from models.ai_base import AIBase
 class AI(AIBase):
     """Phase‑aware greedy Vindinium bot adaptive to any max‑turn setting."""
 
+    def __init__(self, name="HeuristicAI", key="YourKeyHere"):
+        super().__init__(name, key)
+        self.nearby_heal_threshold = 60  # Configurable health threshold for nearby healing
+        self.nearby_tavern_distance = 2  # Configurable distance to consider a tavern "nearby"
+        self.prev_positions = []  # Track previous positions
+        self.max_position_history = 5  # How many positions to track
+
     def decide(self):
         g = self.game
         me = g.hero
@@ -82,6 +89,10 @@ class AI(AIBase):
                 if 0 <= ny < g.board_size and 0 <= nx < g.board_size:
                     yield (ny, nx)
 
+        def manhattan_distance(pos1, pos2):
+            """Calculate Manhattan distance between two positions"""
+            return abs(pos1[0] - pos2[0]) + abs(pos1[1] - pos2[1])
+
         def bfs(start, targets):
             """Breadth‑first search that treats mines as walls *except* if a mine is our target."""
             if not targets:
@@ -123,12 +134,24 @@ class AI(AIBase):
 
         dbg: List[Tuple[str, Any]] = [("phase", phase)]
 
-        # 1. Heal if low ------------------------------------------------
-        if me.life <= critical_hp and taverns:
-            tavern, path = bfs(me.pos, taverns)
-            if path:
-                dbg.append(("heal", tavern))
-                return self._package(path, "Heal", dbg, first_step(path))
+        # 1. Heal if low or near tavern with low health -----------------
+        if taverns and me.gold >= 2:  # Only consider healing if we have enough gold
+            # Check for nearby taverns
+            nearby_taverns = [t for t in taverns if manhattan_distance(me.pos, t) <= self.nearby_tavern_distance]
+            
+            # Heal if critical HP or if near tavern with low health
+            if (me.life <= critical_hp) or (nearby_taverns and me.life <= self.nearby_heal_threshold):
+                # If we're near a tavern, use that one
+                if nearby_taverns:
+                    tavern = nearby_taverns[0]  # Use the first nearby tavern
+                    path = [me.pos, tavern]  # Direct path since we're already close
+                else:
+                    # Otherwise find the nearest tavern
+                    tavern, path = bfs(me.pos, taverns)
+                
+                if path:
+                    dbg.append(("heal", tavern, "hp", me.life))
+                    return self._package(path, "Heal", dbg, first_step(path))
 
         # 2. Opportunistic kill ---------------------------------------
         for e in sorted(enemies, key=lambda h: h.life):
