@@ -28,14 +28,34 @@ class AI(AIBase):
         self.prev_actions = []  # Track previous actions for pattern recognition
 
     def decide(self):
+        if self.game is None or getattr(self.game, 'hero', None) is None:
+            return self._package(path=[(0, 0)], action=Actions.WAIT, decisions={}, hero_move=Directions.STAY)
         hero = self.game.hero
         game = self.game
-        remaining_turns = game.max_turns - game.turn
-        enemies = [h for h in game.heroes if h.bot_id != hero.bot_id]
+        # --- Recharge if next to tavern, have gold, and life < 65 ---
+        taverns = set(getattr(self.game, 'taverns_locs', []))
+        y, x = getattr(hero, 'pos', (0, 0))
+        adjacent = [(y-1, x), (y+1, x), (y, x-1), (y, x+1)]
+        if any(t in taverns for t in adjacent) and getattr(hero, 'gold', 0) >= 2 and getattr(hero, 'life', 100) < 65:
+            # Move to the adjacent tavern
+            for t in adjacent:
+                if t in taverns:
+                    path = [getattr(hero, 'pos', (0, 0)), t]
+                    move = Directions.get_direction(getattr(hero, 'pos', (0, 0)), t)
+                    return self._package(
+                        path=path,
+                        action=Actions.NEAREST_TAVERN,
+                        decisions={"reason": "adjacent tavern recharge"},
+                        hero_move=move
+                    )
+        # --- End recharge logic ---
+        remaining_turns = getattr(game, 'max_turns', 0) - getattr(game, 'turn', 0)
+        enemies = [h for h in getattr(game, 'heroes', []) if getattr(h, 'bot_id', None) != getattr(hero, 'bot_id', None)]
         
         # Mark owned mines on the map
-        owned_mines = set(hero.mines)
-        game_map = replace_map_values(game.board_map, owned_mines, 'O')
+        owned_mines = set(getattr(hero, 'mines', []))
+        game_map = getattr(game, 'board_map', [])
+        game_map = replace_map_values(game_map, owned_mines, 'O')
         
         # Update risk threshold based on game state
         self._update_risk_threshold(hero, enemies, remaining_turns)
@@ -45,7 +65,7 @@ class AI(AIBase):
         
         if not actions:
             return self._package(
-                path=[hero.pos],
+                path=[getattr(hero, 'pos', (0, 0))],
                 action=Actions.WAIT,
                 decisions={},
                 hero_move=Directions.STAY

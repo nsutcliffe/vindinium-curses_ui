@@ -6,15 +6,35 @@ from utils.path_finder import bfs_from_xy_to_xy, bfs_from_xy_to_nearest_char
 class AI(AIBase):
 
     def decide(self):
+        if self.game is None or getattr(self.game, 'hero', None) is None:
+            return self._package(path=[(0, 0)], action=Actions.WAIT, decisions={}, hero_move=Directions.STAY)
         hero = self.game.hero
         game = self.game
-        remaining_turns = game.max_turns - game.turn
-        enemies = [h for h in game.heroes if h.bot_id != hero.bot_id]
-        enemies_by_mines = sorted(enemies, key=lambda h: h.mine_count, reverse=True)
+        remaining_turns = getattr(game, 'max_turns', 0) - getattr(game, 'turn', 0)
+        enemies = [h for h in getattr(game, 'heroes', []) if getattr(h, 'bot_id', None) != getattr(hero, 'bot_id', None)]
+        enemies_by_mines = sorted(enemies, key=lambda h: getattr(h, 'mine_count', 0), reverse=True)
 
-        owned_mines = set(hero.mines)
-        game_map = self.game.board_map
+        owned_mines = set(getattr(hero, 'mines', []))
+        game_map = getattr(self.game, 'board_map', [])
         game_map = replace_map_values(game_map, owned_mines, 'O')
+
+        # --- Recharge if next to tavern, have gold, and life < 65 ---
+        taverns = set(getattr(self.game, 'taverns_locs', []))
+        y, x = getattr(hero, 'pos', (0, 0))
+        adjacent = [(y-1, x), (y+1, x), (y, x-1), (y, x+1)]
+        if any(t in taverns for t in adjacent) and getattr(hero, 'gold', 0) >= 2 and getattr(hero, 'life', 100) < 65:
+            # Move to the adjacent tavern
+            for t in adjacent:
+                if t in taverns:
+                    path = [getattr(hero, 'pos', (0, 0)), t]
+                    move = Directions.get_direction(getattr(hero, 'pos', (0, 0)), t)
+                    return self._package(
+                        path=path,
+                        action=Actions.NEAREST_TAVERN,
+                        decisions=[Actions.NEAREST_TAVERN],
+                        hero_move=move
+                    )
+        # --- End recharge logic ---
 
         is_leading = all(hero.mine_count >= e.mine_count for e in enemies)
 

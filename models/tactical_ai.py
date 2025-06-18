@@ -3,6 +3,9 @@ from utils.grid_helpers import replace_map_values
 from utils.path_finder import bfs_from_xy_to_xy, bfs_from_xy_to_nearest_char
 
 
+# loop move detection
+# full recharge
+
 class AI(AIBase):
 
     def decide(self):

@@ -8,7 +8,7 @@ gc.disable()  # Disable automatic garbage collection during tournament
 from clients.basic_client import BasicClient
 from clients.tui_client import Config
 from models import decision_making_ai, heuristic_ai, random_ai, survival_bot, tactical_ai, tactical_with_detour, \
-    forecasting_ai, plan_ahead_ai, tactical_ai_v2, risk_reward_ai, hybrid_ai, pattern_ai
+    forecasting_ai, plan_ahead_ai, tactical_ai_v2, risk_reward_ai, hybrid_ai, pattern_ai, tactical_ai_v3, murder_bot_working_copy
 
 # Local tournament for Vindinium AIs
 # Configuration for the local tournament
@@ -24,13 +24,15 @@ ai_configs = [
     # {"ai": forecasting_ai.AI("dynamic_pr_1", "djt4l0fh"), "key": "djt4l0fh"},
     
     # {"ai": plan_ahead_ai.AI("plan_ahead_1", "7wfi0qb3"), "key": "7wfi0qb3"},
-    #{"ai": heuristic_ai.AI("heuristic1", "hi4uk6g8"), "key": "hi4uk6g8"},
+    {"ai": heuristic_ai.AI("heuristic1", "rhjcaktk"), "key": "rhjcaktk"},
     #{"ai": tactical_ai.AI("tactical_v1", "smzjvxeb"), "key": "smzjvxeb"},
     # {"ai": survival_bot.AI("survivalbot1", "gntccajo"), "key": "gntccajo"}
-    {"ai": tactical_ai_v2.AI("tactical_v2", "mtthsi5p"), "key": "mtthsi5p"},
-    {"ai": risk_reward_ai.AI("risk_reward_v1", "3n38jgzg"), "key": "3n38jgzg"},
-    {"ai": hybrid_ai.AI("hybrid_v1", "10k139up"), "key": "10k139up"},
-    {"ai": pattern_ai.AI("pattern_v1", "d1p8mz5x"), "key": "d1p8mz5x"}
+     {"ai": tactical_ai_v2.AI("tactical_v2", "2c6zjpf2"), "key": "2c6zjpf2"},
+     {"ai": risk_reward_ai.AI("risk_reward_v1", "afqfyt87"), "key": "afqfyt87"},
+    # {"ai": hybrid_ai.AI("hybrid_v1", "ns9g2r7m"), "key": "ns9g2r7m"},
+    #{"ai": pattern_ai.AI("pattern_v2", "68xhd70g"), "key": "68xhd70g"}
+    {"ai": murder_bot_working_copy.AI("murder_bot_v1", "59ndqpkf"), "key": "59ndqpkf"}
+
 
 
 ]
