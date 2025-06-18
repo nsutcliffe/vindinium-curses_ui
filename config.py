@@ -26,6 +26,6 @@ class Config:
             number_of_turns=config_dict.get('number_of_turns', 300),
             map_name=config_dict.get('map_name', 'm3'),
             ai=config_dict.get('ai', None),
-            key=config_dict.get('key', None),
+            key=config_dict.get('ai', None).key,
             delay=config_dict.get('delay', 0.1)
         )

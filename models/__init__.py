@@ -4,5 +4,6 @@ from . import (
     tactical_ai,
     tactical_ai_v2,
     risk_reward_ai,
-    hybrid_ai
+    hybrid_ai,
+    tactical_ai_v3
 )

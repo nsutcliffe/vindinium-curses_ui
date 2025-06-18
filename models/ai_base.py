@@ -48,6 +48,7 @@ class Directions(str, Enum):
 
 class Actions(str, Enum):
     NEAREST_TAVERN = "NEAREST_TAVERN"
+    OPPORTUNISTIC_TAVERN = "OPPORTUNISTIC_TAVERN"
     ENDGAME_TAVERN = "ENDGAME_TAVERN"
     TAKE_NEAREST_MINE = "TAKE_NEAREST_MINE"
     ATTACK_NEAREST = "ATTACK_NEAREST"
@@ -56,6 +57,10 @@ class Actions(str, Enum):
     SUICIDE = "SUICIDE"
     WAIT = "WAIT"
     DEFEND_MINE = "DEFEND_MINE"
+    RUN = "RUN"
+    TWO_STOP_ATTACK = "TWO_STOP_ATTACK"
+    TWO_STOP_MINE = "TWO_STOP_MINE"
+
 
 class AIBase(ABC):
     def __init__(self, name: str = "UnknownAIName", key: str = "UnknownKey"):
@@ -110,7 +115,7 @@ class AIBase(ABC):
         taverns = self.taverns()
         mines = self.mines()
         enemies = self.enemies()
-        print(f"{self.name}:  action: {action} hero_move: {hero_move}")
+        # print(f"{self.name}:  action: {action} hero_move: {hero_move}")
         me_pos = getattr(me, 'pos', (0, 0))
         nearest_enemy = (
             min(

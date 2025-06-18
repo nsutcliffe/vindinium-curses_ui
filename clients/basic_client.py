@@ -1,6 +1,5 @@
 import ast
 import configparser
-import json
 import os
 import select
 import sys
@@ -113,7 +112,7 @@ class ClientWithSaveAndLoad:
                 printable = printable + str(k) + ": " + str(v) + coma
                 a = a + 1
 
-        print("Event by {} : {}".format(self.ai.name, printable))
+        # print("Event by {} : {}".format(self.ai.name, printable))
 
     def get_bot(self):
         return self.bot.clone_me()

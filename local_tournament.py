@@ -8,17 +8,17 @@ gc.disable()  # Disable automatic garbage collection during tournament
 
 from clients.basic_client import BasicClient
 from clients.tui_client import Config
-from models import heuristic_ai, tactical_ai_v2, risk_reward_ai, murder_bot_working_copy
+from models import adaptive_lookahead_ai, heuristic_ai, tactical_ai_v2, tactical_ai_v4, risk_reward_ai, tactical_ai_v3, risk_reward_ai_v2
 
 # Local tournament for Vindinium AIs
 # Configuration for the local tournament
 
 ai_configs = [
 
-    {"ai": heuristic_ai.AI("heuristic1", "rhjcaktk"), "key": "rhjcaktk"},
-    {"ai": tactical_ai_v2.AI("tactical_v2", "2c6zjpf2"), "key": "2c6zjpf2"},
-    {"ai": risk_reward_ai.AI("risk_reward_v1", "afqfyt87"), "key": "afqfyt87"},
-    {"ai": murder_bot_working_copy.AI("murder_bot_v1", "mt5h908j"), "key": "mt5h908j"}
+    {"ai": tactical_ai_v2.AI("tactical_v2", "hdwscqdd")},
+    {"ai": tactical_ai_v3.AI("tactical_v3", "1z1zyca4")},
+    {"ai": risk_reward_ai_v2.AI("risk_reward_v2", "5jbmns04")},
+    {"ai": tactical_ai_v4.AI("tactical_v4", "3ahp4fck")},
 
 ]
 

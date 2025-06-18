@@ -13,6 +13,9 @@ class AI(AIBase):
     LOOKAHEAD_DEPTH = 3  # 2-ply minimax
 
     def decide(self):
+        # Initialize pathfinding cache for this turn
+        self._path_cache = {}
+        self._eval_cache = {}
         if self.game is None or getattr(self.game, 'hero', None) is None:
             return self._package(path=[(0, 0)], action=Actions.WAIT, decisions={}, hero_move=Directions.STAY)
         hero = self.game.hero
@@ -50,21 +53,41 @@ class AI(AIBase):
             hero_move=direction
         )
 
+    def _cache_bfs_from_xy_to_nearest_char(self, game_map, start_pos, end_char):
+        key = (self._hashable_map(game_map), start_pos, end_char)
+        if key in self._path_cache:
+            return self._path_cache[key]
+        result = bfs_from_xy_to_nearest_char(game_map, start_pos, end_char)
+        self._path_cache[key] = result
+        return result
+
+    def _cache_bfs_from_xy_to_xy(self, game_map, start_pos, target_pos):
+        key = (self._hashable_map(game_map), start_pos, target_pos)
+        if key in self._path_cache:
+            return self._path_cache[key]
+        result = bfs_from_xy_to_xy(game_map, start_pos, target_pos)
+        self._path_cache[key] = result
+        return result
+
+    def _hashable_map(self, game_map):
+        # Convert map to a tuple of strings for hashing
+        return tuple(tuple(row) if isinstance(row, list) else row for row in game_map)
+
     def _get_possible_actions(self, game_map, hero, enemies, remaining_turns):
         actions = []
         # Go to tavern if low HP
         if getattr(hero, 'life', 100) < 40:
-            path, dist = bfs_from_xy_to_nearest_char(game_map, getattr(hero, 'pos', (0, 0)), MapElements.TAVERN)
+            path, dist = self._cache_bfs_from_xy_to_nearest_char(game_map, getattr(hero, 'pos', (0, 0)), MapElements.TAVERN)
             if path and dist < remaining_turns:
                 actions.append({'path': path, 'action': Actions.NEAREST_TAVERN})
         # Take nearest unowned mine
-        path, dist = bfs_from_xy_to_nearest_char(game_map, getattr(hero, 'pos', (0, 0)), MapElements.MINE)
+        path, dist = self._cache_bfs_from_xy_to_nearest_char(game_map, getattr(hero, 'pos', (0, 0)), MapElements.MINE)
         if path and dist < remaining_turns and getattr(hero, 'life', 100) > 20 + dist:
             actions.append({'path': path, 'action': Actions.TAKE_NEAREST_MINE})
         # Attack nearest enemy if stronger
         for enemy in enemies:
             if getattr(hero, 'life', 100) > getattr(enemy, 'life', 100) + 10:
-                path, dist = bfs_from_xy_to_xy(game_map, getattr(hero, 'pos', (0, 0)), getattr(enemy, 'pos', (0, 0)))
+                path, dist = self._cache_bfs_from_xy_to_xy(game_map, getattr(hero, 'pos', (0, 0)), getattr(enemy, 'pos', (0, 0)))
                 if path and dist < remaining_turns:
                     actions.append({'path': path, 'action': Actions.ATTACK_NEAREST})
         # Wait as fallback
@@ -130,7 +153,17 @@ class AI(AIBase):
         return max_score
 
     def _evaluate_state(self, game, hero, enemies):
-        # Score: mines, life, gold, penalize enemy mines, bonus for tavern proximity, big penalty for death
+        # Use a cache key based on hero/enemy/mines/life/gold/pos for repeated states
+        cache_key = (
+            tuple(sorted(getattr(hero, 'mines', []))),
+            getattr(hero, 'life', 0),
+            getattr(hero, 'gold', 0),
+            tuple((getattr(e, 'bot_id', None), tuple(sorted(getattr(e, 'mines', [])))) for e in enemies),
+            tuple(getattr(e, 'life', 0) for e in enemies),
+            getattr(hero, 'pos', (0, 0)),
+        )
+        if cache_key in self._eval_cache:
+            return self._eval_cache[cache_key]
         score = len(getattr(hero, 'mines', [])) * self.MINE_VALUE
         score += getattr(hero, 'life', 0) * self.LIFE_VALUE
         score += getattr(hero, 'gold', 0) * self.GOLD_VALUE
@@ -140,7 +173,11 @@ class AI(AIBase):
             score -= self.DEATH_PENALTY
         # Bonus for being near a tavern if low HP
         if getattr(hero, 'life', 100) < 40:
-            path, dist = bfs_from_xy_to_nearest_char(getattr(game, 'board_map', []), getattr(hero, 'pos', (0, 0)), MapElements.TAVERN)
+            # Use cached pathfinding for tavern
+            board_map = getattr(game, 'board_map', [])
+            pos = getattr(hero, 'pos', (0, 0))
+            path, dist = self._cache_bfs_from_xy_to_nearest_char(board_map, pos, MapElements.TAVERN)
             if dist < 3:
                 score += self.TAVERN_BONUS
+        self._eval_cache[cache_key] = score
         return score 
