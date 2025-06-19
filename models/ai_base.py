@@ -60,6 +60,7 @@ class Actions(str, Enum):
     RUN = "RUN"
     TWO_STOP_ATTACK = "TWO_STOP_ATTACK"
     TWO_STOP_MINE = "TWO_STOP_MINE"
+    EXPLORE = "EXPLORE"
 
 
 class AIBase(ABC):
@@ -115,7 +116,7 @@ class AIBase(ABC):
         taverns = self.taverns()
         mines = self.mines()
         enemies = self.enemies()
-        # print(f"{self.name}:  action: {action} hero_move: {hero_move}")
+        print(f"{self.name}:  action: {action} hero_move: {hero_move}")
         me_pos = getattr(me, 'pos', (0, 0))
         nearest_enemy = (
             min(

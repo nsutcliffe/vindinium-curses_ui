@@ -69,8 +69,12 @@ class AI(AIBase):
                     path, distance = bfs_from_xy_to_xy(game_map, enemy.pos, mine_pos)
                     if distance < 3 and hero.life > enemy.life + distance:
                         # Intercept enemy before they reach our mine
-                        intercept_path, _ = bfs_from_xy_to_xy(game_map, hero.pos, path[0])
-                        return intercept_path, Actions.DEFEND_MINE
+                        intercept_pathA, intercept_distanceA = bfs_from_xy_to_xy(game_map, hero.pos, path[0])
+                        intercept_pathB, intercept_distanceB = bfs_from_xy_to_xy(game_map, hero.pos, mine_pos)
+
+                        intercept_path, intercept_distance = (intercept_pathA, intercept_distanceA) if intercept_distanceA < intercept_distanceB else (intercept_pathB, intercept_distanceB)
+                        if len(intercept_path)>0:
+                            return intercept_path, Actions.DEFEND_MINE
             return None
 
         def end_game_if():
@@ -107,7 +111,7 @@ class AI(AIBase):
                 enemy_position = path[-1]
                 enemy = [e for e in enemies if
                          e.pos[0] == enemy_position[0] and e.pos[1] == enemy_position[1]]
-                if distance < 4 and len(enemy) > 0 and enemy[0].life <= hero.life - distance - 1:
+                if distance < 5 and distance % 2 != 0 and len(enemy) > 0 and enemy[0].life <= hero.life - distance - 1:
                     return path, Actions.ATTACK_NEAREST
             return None
 
